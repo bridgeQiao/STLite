@@ -3,10 +3,10 @@
 */
 #include <cstring>
 
-if 0
+#if 0
 #include <new>
 #define __THROW_BAD_ALLOC throw bad_alloc
-#elif !defind(__THROW_BAD_ALLOC)
+#elif !defined(__THROW_BAD_ALLOC)
 #include <iostream>
 #define __THROW_BAD_ALLOC std::cerr << "out of memory" << std::endl; exit(1)
 #endif
@@ -85,18 +85,18 @@ namespace jw {
 	template<bool threads, int inst>
 	class __default_alloc_template {
 	private:
-		size_t ROUND_UP(size_t n) {
+		static size_t ROUND_UP(size_t n) {
 			return (n + __ALIGN - 1) & ~(__ALIGN - 1);
 		}
-		size_t FREELIST_INDEX(size_t n) {
+		static size_t FREELIST_INDEX(size_t n) {
 			return (n + __ALIGN - 1) / __ALIGN - 1;
 		}
-		void* refill(size_t n);
-		char* chunk_alloc(size_t n, int& nobjs);
+		static void* refill(size_t n);
+		static char* chunk_alloc(size_t n, int& nobjs);
 
 	public:
 		static void* allocate(size_t n);
-		static void* deallocate(void* p, size_t n);
+		static void deallocate(void* p, size_t n);
 		static void* reallocate(void* p, size_t old_sz, size_t new_sz);
 	private:
 		union obj
@@ -118,10 +118,10 @@ namespace jw {
 	template<bool threads, int inst>
 	char* __default_alloc_template<threads, inst>::end_chunk = 0;
 	template<bool threads, int inst>
-	char* __default_alloc_template<threads, inst>::heap_size = 0;
+	size_t __default_alloc_template<threads, inst>::heap_size = 0;
 	template<bool threads, int inst>
-	char* __default_alloc_template<threads, inst>::free_list[__NFREELISTS] = 
-	{0};
+	typename __default_alloc_template<threads, inst>::obj* volatile
+		__default_alloc_template<threads, inst>::free_list[__NFREELISTS] = {0};
 
 	//alloc n bytes
 	template<bool threads, int inst>
@@ -134,7 +134,7 @@ namespace jw {
 		obj* volatile* my_free_list = free_list + FREELIST_INDEX(n);
 		obj* mem = (*my_free_list);
 		if (0 == mem) {
-			mem = refill(n);
+			mem = static_cast<obj*>( refill(ROUND_UP(n)));
 			return mem;
 		}
 		(*my_free_list) = mem->free_list_link;
@@ -166,6 +166,7 @@ namespace jw {
 		return mem;
 	}
 
+	// n must use ROUND_UP, because the free memory must be aligned by 8
 	template<bool threads, int inst>
 	void* __default_alloc_template<threads, inst>::refill(size_t n) {
 		int nobjs = 20;
@@ -177,8 +178,8 @@ namespace jw {
 		obj* mem = (obj*)chunk;
 		(*my_free_list) = (obj*)(chunk + n);
 		// link the left
-		obj* current_blk, next_blk;
-		next_blk = (*my_free_list);
+		obj* next_blk = (*my_free_list);
+		obj* current_blk = next_blk;
 		for (int i = 1; i < nobjs - 1; ++i) {
 			current_blk = next_blk;
 			next_blk = (obj*)(next_blk->data + n);
@@ -216,7 +217,7 @@ namespace jw {
 				// check free_list for free block
 				obj* volatile* my_free_list;
 				obj* p;
-				for (int index = n; index <= __MAX_BYTES; index += __ALIGN) {
+				for (size_t index = n; index <= __MAX_BYTES; index += __ALIGN) {
 					my_free_list = free_list + FREELIST_INDEX(index);
 					p = (*my_free_list);
 					if (0 != p) {	// free_list has space
@@ -228,7 +229,7 @@ namespace jw {
 				}
 				// can't find space, use __malloc_alloc_template's oom_alloc
 				end_chunk = 0;
-				start_chunk = malloc_alloc::allocate(bytes_to_get);
+				start_chunk = static_cast<char*>(malloc_alloc::allocate(bytes_to_get));
 			}
 			// heap has space
 			heap_size += bytes_to_get;
@@ -237,6 +238,13 @@ namespace jw {
 		}
 	}
 
+#ifdef __USE_ALLOCATOR_THREADS
+	const bool __NODE_ALLOCATOR_THREADS = true;
+#else
+	const bool __NODE_ALLOCATOR_THREADS = false;
+#endif // __USE_ALLOCATOR_THREADS
+
+
 #ifdef __USE_MALLOC
 	using alloc = malloc_alloc;
 #else
@@ -244,7 +252,7 @@ namespace jw {
 #endif // __USE_MALLOC
 
 	// simple allocate, for interface
-	template<typename T, typename Alloc>
+	template<typename T, typename Alloc=alloc>
 	class simple_alloc {
 	public:
 		static T* allocate(size_t n) {
@@ -254,7 +262,7 @@ namespace jw {
 			return (T*)Alloc::allocate(sizeof(T));
 		}
 		static void deallocate(T* p) {
-			Alloc::deallocate(p, sizeof(T);
+			Alloc::deallocate(p, sizeof(T));
 		}
 		static void deallocate(T* p, size_t n) {
 			if (n != 0) Alloc::deallocate(p, n * sizeof(T));

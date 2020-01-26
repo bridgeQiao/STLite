@@ -1,5 +1,12 @@
 #pragma once
 
+#include <algorithm>
+#include "jw_type_traits.hpp"
+
+using std::copy;
+using std::fill_n;
+using std::fill;
+
 namespace jw {
 	// ----------------------------------------------------  uninitialized_copy
 	template<typename InsertIterator, typename ForwardIterator>
@@ -9,7 +16,7 @@ namespace jw {
 	}
 
 	template<typename InsertIterator, typename ForwardIterator>
-	ForwardInterator __uninitialized_copy_aux(InsertIterator first,
+	ForwardIterator __uninitialized_copy_aux(InsertIterator first,
 		InsertIterator last, ForwardIterator result, __false_type) {
 		ForwardIterator cur = result;
 		for (; first != last; ++first, ++cur) {
@@ -101,6 +108,6 @@ namespace jw {
 	template<typename ForwardIterator, typename Size, typename T>
 	inline ForwardIterator uninitialized_fill_n(ForwardIterator first,
 		Size n, const T& x) {
-		return __uninitialized_fill_n(first, n, x);
+		return __uninitialized_fill_n(first, n, x, value_type(first));
 	}
 }

@@ -1,27 +1,32 @@
 #include <iostream>
-#include <vector>
-#include "simplealloc.hpp"
-using namespace std;
+#include "jw_vector.hpp"
+
+using std::cout;
+using std::endl;
 
 int main()
 {
-    vector<int, jw::allocator<int>> vi;
+    jw::vector<int> vi;
+    cout << vi.size() << vi.capacity() << endl;
+
+    int a[] = { 1,2,3,4,5,6,7,8,9 };
     vi.push_back(3);
+    vi.push_back(4);
+    vi.push_back(5);
+    jw::vector<int> vi2(8, 0);
+    jw::vector<int> vi3(a, a + 9);
     for (const auto& i : vi) {
         cout << i << " ";
     }
+    cout << endl;
     
-    // test union
-    union obj
-    {
-        union obj* next;
-        char data[1];
-    };
-    union obj a1;
-    union obj* a2;
-    cout << "sizeof: obj " << sizeof(a1) << " obj* " << sizeof(a2) << endl;
-    char mem[2]{ 0 };
-    cout << sizeof(mem) << " " << sizeof(mem + 1) << endl;
-    cout << (void*)&mem << "\n" << (void*)&(mem[0]) << "\n" << (void*)&(mem[1]);
+    for (const auto& i : vi2) {
+        cout << i << " ";
+    }
+    cout << endl;
+
+    for (const auto& i : vi3)
+        cout << i << " ";
+    cout << endl;
     return 0;
 }
