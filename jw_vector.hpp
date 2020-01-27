@@ -15,6 +15,7 @@ namespace jw {
 		using value_type = T;
 		using pointer = value_type*;
 		using iterator = value_type*;
+		using const_iterator = const iterator;
 		using reference = value_type&;
 		using size_type = size_t;
 		using difference_type = ptrdiff_t;
@@ -38,13 +39,14 @@ namespace jw {
 
 		// functionial method
 		iterator begin() { return start_; }
+		const_iterator begin() const { return start_; }
 		iterator end() { return finish_; }
-		size_type size() { return size_type(end() - begin()); }
+		const_iterator end() const { return finish_; }
+		size_type size() const { return size_type(end() - begin()); }
 		size_type capacity() const {
-			//return size_type(end_of_storage_ - begin());
-			return size_type(end_of_storage_ - start_);
+			return size_type(end_of_storage_ - begin());
 		}
-		bool empty() { return end() == begin(); }
+		bool empty() const { return end() == begin(); }
 		reference operator[](size_type n) { return *(begin() + n); }
 		reference front() { return *begin(); }
 		reference back() { return *(end() - 1); }
@@ -113,7 +115,7 @@ namespace jw {
 	inline void vector<T, Alloc>::insert(iterator position, size_type n, const T& x)
 	{
 		if (n != 0) {
-			if (end_of_storage_ - finish_ >= n) {
+			if (size_type(end_of_storage_ - finish_) >= n) {
 				size_type elems_after = size_type(finish_ - position);
 				iterator old_finish = finish_;
 				T x_copy = x;

@@ -1,6 +1,7 @@
 /*
 	Learning STL alloc
 */
+#pragma once
 #include <cstring>
 
 #if 0
@@ -200,7 +201,7 @@ namespace jw {
 			return chunk;
 		}
 		else if (chunk_left >= n) {	// chunk can supply more then one
-			nobjs = chunk_left / n;
+			nobjs = int(chunk_left / n);
 			start_chunk += n * nobjs;
 			return chunk;
 		}

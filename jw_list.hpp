@@ -19,7 +19,7 @@ namespace jw {
 	{
 		using link_type = __list_node<T>*;
 		using iterator = __list_iterator<T, T&, T*>;
-		using const_iterator = __list_iterator<T, const T&, const T*>;
+		using const_iterator = const iterator;
 		using Self = __list_iterator<T, Ref, Ptr>;
 		using value_type = T;
 		using pointer = Ptr;
@@ -30,9 +30,12 @@ namespace jw {
 
 		void incr() { node = node->next; }
 		void decr() { node = node->prev; }
+		__list_iterator(link_type position) : node(position) {}
 		// look like POD's pointer
 		reference operator*() { return node->data; }
 		pointer operator->() { return &(operator*()); }
+		bool operator==(const iterator& rhs) { return this->node == rhs.node; }
+		bool operator!=(const iterator& rhs) { return this->node != rhs.node; }
 		Self& operator++() {
 			incr();
 			return *this;
@@ -63,15 +66,14 @@ namespace jw {
 		using list_node_allocator = simple_alloc<list_node, alloc>;
 		using link_type = __list_node<T>*;
 		using iterator = __list_iterator<T, T&, T*>;
-		using const_iterator = __list_iterator<T, const T&, const T*>;
+		using const_iterator = const iterator;
+		using value_type = T;
+		using pointer = value_type*;
+		using reference = value_type&;
+		using size_type = size_t;
+		using difference_type = ptrdiff_t;
 
-		// construct
-		list() {
-			node = get_node();
-			node->next = node;
-			node->prev = node;
-		}
-
+	protected:
 		link_type get_node() { return list_node_allocator::allocate(1); }
 		void put_node(link_type p) { list_node_allocator::deallocate(p); }
 		link_type create_node(const T& x) {
@@ -83,8 +85,71 @@ namespace jw {
 			destroy(&(p->data));
 			put_node(p);
 		}
+		void empty_initialize() {
+			node = get_node();
+			node->next = node;
+			node->prev = node;
+		}
+	public:
+		// construct
+		list() {
+			empty_initialize();
+		}
+		list(pointer first, pointer last) {
+			empty_initialize();
+			pointer tmp = first;
+			while (tmp != last) {
+				insert(end(), *tmp);
+				++tmp;
+			}
+		}
+
+
 		iterator begin() { return node->next; }
+		const_iterator begin() const { return node->next; }
 		iterator end() { return node; }
+		const_iterator end() const { return node; }
+		bool empty() const { return begin() == end(); }
+		size_type size() const {
+			size_type = count = 0;
+			iterator current;
+			while (current != end())
+			{
+				++current;
+				++count;
+			}
+			return count;
+		}
+		reference front() { return *begin(); }
+		reference back() { return *(--end()); }
+		void insert(iterator position, const T& x) {
+			link_type new_node = create_node(x);
+			new_node->next = position.node;
+			new_node->prev = position.node->prev;
+			position.node->prev->next = new_node;
+			position.node->prev = new_node;
+		}
+		iterator erase(iterator position) {
+			link_type prev_link = position.node->prev;
+			link_type next_link = position.node->next;
+			prev_link->next = next_link;
+			next_link->prev = prev_link;
+			destroy_node(position.node);
+			return iterator(next_link);
+		}
+		void push_front(const T& x) {
+			insert(begin(), x);
+		}
+		void push_back(const T& x) {
+			insert(end(), x);
+		}
+		void pop_front() {
+			erase(begin());
+		}
+		void pop_back() {
+			iterator tmp = end();
+			erase(--tmp);
+		}
 	protected:
 		link_type node;
 	};
