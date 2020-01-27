@@ -22,43 +22,43 @@ namespace jw {
 		using const_iterator = const iterator;
 		using Self = __list_iterator<T, Ref, Ptr>;
 		using value_type = T;
-		using pointer = Ptr;
-		using reference = Ref;
-		using iterator_category = bidirectional_iterator_tag;
-		using size_type = size_t;
-		using differcen_type = ptrdiff_t;
+using pointer = Ptr;
+using reference = Ref;
+using iterator_category = bidirectional_iterator_tag;
+using size_type = size_t;
+using differcen_type = ptrdiff_t;
 
-		void incr() { node = node->next; }
-		void decr() { node = node->prev; }
-		__list_iterator(link_type position) : node(position) {}
-		// look like POD's pointer
-		reference operator*() { return node->data; }
-		pointer operator->() { return &(operator*()); }
-		bool operator==(const iterator& rhs) { return this->node == rhs.node; }
-		bool operator!=(const iterator& rhs) { return this->node != rhs.node; }
-		Self& operator++() {
-			incr();
-			return *this;
-		}
-		Self operator++(int) {
-			Self tmp = *this;
-			incr();
-			return tmp;
-		}
-		Self& operator--() {
-			decr();
-			return *this;
-		}
-		Self operator--(int) {
-			Self tmp = *this;
-			decr();
-			return *this;
-		}
-		// data member
-		link_type node;
+void incr() { node = node->next; }
+void decr() { node = node->prev; }
+__list_iterator(link_type position) : node(position) {}
+// look like POD's pointer
+reference operator*() { return node->data; }
+pointer operator->() { return &(operator*()); }
+bool operator==(const iterator& rhs) { return this->node == rhs.node; }
+bool operator!=(const iterator& rhs) { return this->node != rhs.node; }
+Self& operator++() {
+	incr();
+	return *this;
+}
+Self operator++(int) {
+	Self tmp = *this;
+	incr();
+	return tmp;
+}
+Self& operator--() {
+	decr();
+	return *this;
+}
+Self operator--(int) {
+	Self tmp = *this;
+	decr();
+	return *this;
+}
+// data member
+link_type node;
 	};
 
-	template<typename T, typename Alloc=alloc>
+	template<typename T, typename Alloc = alloc>
 	class list {
 	protected:
 		using list_node = __list_node<T>;
@@ -103,7 +103,11 @@ namespace jw {
 				++tmp;
 			}
 		}
-
+		~list()
+		{
+			clear();
+			destroy_node(node);
+		}
 
 		iterator begin() { return node->next; }
 		const_iterator begin() const { return node->next; }
@@ -119,6 +123,15 @@ namespace jw {
 				++count;
 			}
 			return count;
+		}
+		void clear() {
+			link_type cnt = node->next;
+			link_type tmp = cnt;
+			while (cnt != node) {
+				tmp = cnt;
+				destroy_node(tmp);
+				cnt = cnt->next;
+			}
 		}
 		reference front() { return *begin(); }
 		reference back() { return *(--end()); }
