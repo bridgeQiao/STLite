@@ -1,4 +1,6 @@
 #include <iostream>
+#include <algorithm>
+#include <list>
 #include "jw_vector.hpp"
 #include "jw_list.hpp"
 
@@ -39,5 +41,22 @@ int main()
     print(ilist);
     ilist.pop_back();
     print(ilist);
+    ilist.reverse();
+    print(ilist);
+    auto pos = std::find(ilist.begin(), ilist.end(), 3);
+    cout << *pos << endl;
+    jw::list<int> ilist2;
+    ilist2.push_back(10);
+    ilist2.push_back(20);
+    ilist.splice(pos, ilist2);
+    print(ilist);
+    jw::list<int> ilists1 {1,2,3,4,5,5,6,7};
+    jw::list<int> ilists2{ 1,5,7,8,4,6,3,5 };
+    ilists2.sort();
+    //jw::list<int> ilists2{ 1,3,4,5,5,6,7,8 };
+    print(ilists2);
+    ilists1.merge(ilists2);
+    print(ilists1);
+    cout << ilists1.size();
     return 0;
 }
