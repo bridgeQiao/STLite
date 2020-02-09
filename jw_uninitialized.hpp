@@ -54,13 +54,13 @@ namespace jw {
 
 	// ----------------------------------------------------  uninitialized_fill
 	template<typename ForwardIterator, typename T>
-	inline void __uninitialized_fill(ForwardIterator first,
+	inline void __uninitialized_fill_aux(ForwardIterator first,
 		ForwardIterator last, const T& x, __true_type) {
 		fill(first, last, x);
 	}
 
 	template<typename ForwardIterator, typename T>
-	inline void __uninitialized_fill(ForwardIterator first,
+	inline void __uninitialized_fill_aux(ForwardIterator first,
 		ForwardIterator last, const T& x, __false_type) {
 		ForwardIterator cur = first;
 		for (; cur != last; ++cur) {

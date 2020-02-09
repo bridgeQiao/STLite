@@ -3,6 +3,7 @@
 #include <list>
 #include "jw_vector.hpp"
 #include "jw_list.hpp"
+#include "jw_deque.hpp"
 
 using std::cout;
 using std::endl;
@@ -35,8 +36,8 @@ int main()
     vi2.pop_back();
     print(vi2);
     std::cout << "vi2: size capacity " << vi2.size() << " " << vi2.capacity() << endl;
-    // test list
-    cout << "Test list\n";
+
+    cout << "\n-------------------   Test list\n";
     jw::list<int> ilist(a, a + 9);
     print(ilist);
     ilist.pop_back();
@@ -58,5 +59,22 @@ int main()
     ilists1.merge(ilists2);
     print(ilists1);
     cout << ilists1.size();
+
+    cout << "\n-----------------   Test deque\n";
+    jw::deque<int> ideque1;
+    ideque1.push_back(1);
+    print(ideque1);
+    ideque1.push_front(9);
+    ideque1.push_back(8);
+    ideque1.push_back(3);
+    ideque1.push_back(4);
+    print(ideque1);
+    ideque1.pop_back();
+    ideque1.pop_front();
+    ideque1.pop_front();
+    print(ideque1);
+    auto iter = ideque1.begin() + 1;
+    ideque1.insert(iter, 10);
+    print(ideque1);
     return 0;
 }

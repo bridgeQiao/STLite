@@ -32,8 +32,8 @@ namespace jw {
 		void decr() { node = node->prev; }
 		__list_iterator(link_type position) : node(position) {}
 		// look like POD's pointer
-		reference operator*() { return node->data; }
-		pointer operator->() { return &(operator*()); }
+		reference operator*() const { return node->data; }
+		pointer operator->() const { return &(operator*()); }
 		bool operator==(const Self& rhs) const { return this->node == rhs.node; }
 		bool operator!=(const Self& rhs) const { return this->node != rhs.node; }
 		Self& operator++() {
@@ -62,8 +62,8 @@ namespace jw {
 	class list {
 	protected:
 		using list_node = __list_node<T>;
-	public:
 		using list_node_allocator = simple_alloc<list_node, alloc>;
+	public:
 		using link_type = __list_node<T>*;
 		using iterator = __list_iterator<T, T&, T*>;
 		using const_iterator = __list_iterator<T, const T&, const T*>;
