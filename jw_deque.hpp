@@ -41,12 +41,12 @@ namespace jw {
 		pointer operator->() const { return &(operator*()); }
 
 		// -, <, ==, !=, right hand: iterator
-		difference_type operator-(const Self& rhs) {
+		difference_type operator-(const Self& rhs) const {
 			difference_type off_node = node - rhs.node;
 			return (off_node - 1) * difference_type(buffer_size()) +
 				(cur - first) + (rhs.last - rhs.cur);
 		}
-		bool operator<(const Self& rhs) {
+		bool operator<(const Self& rhs) const {
 			return node == rhs.node ? (cur < rhs.cur) : (node < rhs.node);
 		}
 		bool operator==(const Self& rhs) const { return cur == rhs.cur; }
@@ -99,12 +99,12 @@ namespace jw {
 			}
 			return *this;
 		}
-		Self operator+(difference_type n) {
+		Self operator+(difference_type n) const {
 			Self tmp = *this;
 			return tmp += n;
 		}
 		Self& operator-= (difference_type n) { return *this += -n; }
-		Self operator-(difference_type n) {
+		Self operator-(difference_type n) const {
 			Self tmp = *this;
 			return tmp -= n;
 		}
@@ -131,6 +131,7 @@ namespace jw {
 		using value_type = T;
 		using pointer = value_type*;
 		using reference = value_type&;
+		using const_reference = const reference;
 		using size_type = size_t;
 		using difference_type = ptrdiff_t;
 
@@ -159,10 +160,12 @@ namespace jw {
 		iterator end() { return finish_; }
 		const_iterator end() const { return finish_; }
 		reference front() { return *start_; }
+		const_reference front() const { return *start_; }
 		reference back() { return *(finish_ - 1); }
+		const_reference back() const { return *(finish_ - 1); }
 		reference operator[](size_type n) { return start_[difference_type(n)]; }
-		size_type size() { return finish_ - start_; }
-		bool empty() { return start_ == finish_; }
+		size_type size() const { return finish_ - start_; }
+		bool empty() const { return start_ == finish_; }
 		void clear();
 
 		void push_back(const value_type& x);

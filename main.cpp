@@ -4,6 +4,9 @@
 #include "jw_vector.hpp"
 #include "jw_list.hpp"
 #include "jw_deque.hpp"
+#include "jw_stack.hpp"
+#include "jw_queue.hpp"
+#include "jw_rb_tree.hpp"
 
 using std::cout;
 using std::endl;
@@ -15,6 +18,8 @@ void print(const T& x)
         std::cout << i << " ";
     std::cout << std::endl;
 }
+
+void test_rb_tree();
 
 int main()
 {
@@ -76,5 +81,41 @@ int main()
     auto iter = ideque1.begin() + 1;
     ideque1.insert(iter, 10);
     print(ideque1);
+
+    cout << "\n-----------------   Test stack & queue\n";
+    jw::stack<int> istack;
+    jw::queue<int> iqueue;
+    istack.push(3);
+    istack.push(4);
+    iqueue.push(3);
+    iqueue.push(4);
+    printf("stack size: %d, queue size: %d\n", istack.size(), iqueue.size());
+    printf("stack top: %d, queue front: %d\n", istack.top(), iqueue.front());
+
+    cout << "\n-----------------   rb tree\n";
+    test_rb_tree();
     return 0;
+}
+
+template<typename T>
+struct IDentity {
+    const T& operator()(const T& x) { return x; }
+};
+
+void test_rb_tree() {
+    jw::rb_tree<int, int, IDentity<int>, std::less<int>> itree;
+    itree.insert_unique(10);
+    itree.insert_unique(7);
+    itree.insert_unique(8);
+    itree.insert_unique(15);
+    itree.insert_unique(5);
+    itree.insert_unique(6);
+    itree.insert_unique(11);
+    itree.insert_unique(13);
+    itree.insert_unique(12);
+    print(itree);
+    auto iter = itree.find(8);
+    cout << "8 is " << *iter << endl;
+    itree.erase(iter);
+    print(itree);
 }
