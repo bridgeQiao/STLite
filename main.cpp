@@ -106,16 +106,26 @@ void test_rb_tree() {
     jw::rb_tree<int, int, IDentity<int>, std::less<int>> itree;
     itree.insert_unique(10);
     itree.insert_unique(7);
-    itree.insert_unique(8);
+    itree.insert_unique(9);
     itree.insert_unique(15);
     itree.insert_unique(5);
+    itree.insert_unique(6);
     itree.insert_unique(6);
     itree.insert_unique(11);
     itree.insert_unique(13);
     itree.insert_unique(12);
+    itree.insert_unique(8);
     print(itree);
+    // test: 1. delete root( 9 ), test root
+    // 2. delete 8 and 7(or 5), test while loop in rebalance
     auto iter = itree.find(8);
-    cout << "8 is " << *iter << endl;
     itree.erase(iter);
     print(itree);
+    iter = itree.find(5);
+    cout << "The number is " << *iter << endl;
+    itree.erase(iter);
+    print(itree);
+
+    jw::rb_tree<int, int, IDentity<int>, std::less<int>> itree2(itree);
+    print(itree2);
 }

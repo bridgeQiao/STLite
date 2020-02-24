@@ -198,10 +198,9 @@ namespace jw {
 		__rb_tree_node<T>*& root, __rb_tree_node<T>*& leftmost, __rb_tree_node<T>*& rightmost) {
 		__rb_tree_iterator<T, T&, T*> y(z);
 		if (z->left != 0 && z->right != 0) { // has two child
-			y.node = z->right;
 			++y;
 			z->value_field = y.node->value_field;
-			__rb_tree_rebalance_for_erase(y.node, root, leftmost, rightmost);
+			return __rb_tree_rebalance_for_erase(y.node, root, leftmost, rightmost);
 		}
 		else { // has one or null child
 			if (z == root) {
@@ -225,12 +224,10 @@ namespace jw {
 			else { // z != root
 				// leftmost and rightmost
 				if (z == rightmost) {
-					y.node = z;
 					--y;
 					rightmost = y.node;
 				}
 				if (z == leftmost) {
-					y.node = z;
 					++y;
 					leftmost = y.node;
 				}
@@ -318,6 +315,7 @@ namespace jw {
 				}
 			}
 		}
+		return z;
 	}
 
 	template<typename Key, typename Value, typename KeyOfValue,
@@ -356,6 +354,7 @@ namespace jw {
 				tmp->color = rhs->color;
 				tmp->left = 0;
 				tmp->right = 0;
+				return tmp;
 			}
 			void destroy_node(link_type p) {
 				destroy(&p->value_field);
@@ -370,8 +369,8 @@ namespace jw {
 			link_type& leftmost() const { return header->left; }
 			link_type& rightmost() const { return header->right; }
 
-			static link_type minimum(link_type x) { return __rb_tree_node::minimum(x); }
-			static link_type maximum(link_type x) { return __rb_tree_node::maxmimum(x); }
+			static link_type minimum(link_type x) { return rb_tree_node::minimum(x); }
+			static link_type maximum(link_type x) { return rb_tree_node::maximum(x); }
 
 			void init() {
 				header = get_node();
@@ -388,7 +387,12 @@ namespace jw {
 			void __erase(link_type x);
 
 		public:
-			rb_tree() : node_count(0), key_compare(Compare()) { init(); }
+			rb_tree(const Compare comp = Compare()) 
+				: node_count(0), key_compare(comp) { init(); }
+			rb_tree(const rb_tree& rhs) { 
+				init();
+				*this = rhs; 
+			}
 			~rb_tree() { clear(); put_node(header); }
 
 			rb_tree& operator=(const rb_tree& rhs);
@@ -446,7 +450,12 @@ namespace jw {
 	typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::link_type
 	rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::__copy(link_type x, link_type p)
 	{
-		return link_type();
+		// for simple implementation, difference with SGI
+		link_type node_new = clone_node(x);
+		node_new->parent = p;
+		node_new->left = (x->left != 0 ? __copy(x->left, node_new) : 0);
+		node_new->right = (x->right != 0 ? __copy(x->right, node_new) : 0);
+		return node_new;
 	}
 
 	template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
@@ -468,7 +477,6 @@ namespace jw {
 	{
 		if (this != &rhs) {
 			clear();
-			node_count = 0;
 			key_compare = rhs.key_compare;
 			if (rhs.node_count == 0) {
 				root() = 0;
