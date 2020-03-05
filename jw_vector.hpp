@@ -14,8 +14,9 @@ namespace jw {
 	public:
 		using value_type = T;
 		using pointer = value_type*;
+		using const_pointer = const value_type*;
 		using iterator = value_type*;
-		using const_iterator = const iterator;
+		using const_iterator = const value_type*;
 		using reference = value_type&;
 		using size_type = size_t;
 		using difference_type = ptrdiff_t;
@@ -106,9 +107,9 @@ namespace jw {
 			}
 		}
 	protected:
-		iterator start_;
-		iterator finish_;
-		iterator end_of_storage_;
+		T* start_;
+		T* finish_;
+		T* end_of_storage_;
 	};
 
 	template<typename T, typename Alloc>

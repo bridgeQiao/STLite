@@ -190,6 +190,11 @@ namespace jw {
 		return mem;
 	}
 
+	/*
+		Parameter:
+			n : sizeof(T)
+			nobjs : number of T
+	*/
 	template<bool threads, int inst>
 	char* __default_alloc_template<threads, inst>::chunk_alloc(size_t n, int& nobjs) {
 		char* chunk = start_chunk;
