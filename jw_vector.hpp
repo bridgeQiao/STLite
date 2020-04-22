@@ -11,21 +11,47 @@ using std::max;
 namespace jw {
 	template<typename T, typename Alloc = alloc>
 	class vector {
+	private:
+		using data_allocator = simple_alloc<T, alloc>;
+
 	public:
 		using value_type = T;
 		using pointer = value_type*;
 		using const_pointer = const value_type*;
-		using iterator = value_type*;
-		using const_iterator = const value_type*;
 		using reference = value_type&;
+		using const_reference = const value_type&;
 		using size_type = size_t;
 		using difference_type = ptrdiff_t;
+		using iterator = value_type*;
+		using const_iterator = const value_type*;
+		
+	protected:
+		void fill_initialize(size_type n, const_reference x) {
+			start_ = allocate_and_fill(n, x);
+			finish_ = start_ + n;
+			end_of_storage_ = finish_;
+		}
+		iterator allocate_and_fill(size_type n, const_reference x) {
+			iterator result = data_allocator::allocate(n);
+			uninitialized_fill_n(result, n, x);
+			return result;
+		}
+		iterator allocate_and_copy(size_type n, const_iterator first, const_iterator last) {
+			iterator result = data_allocator::allocate(n);
+			uninitialized_copy(first, last, result);
+			return result;
+		}
+		void insert_aux(iterator position, const_reference x);
+		void deallocate() {
+			if (start_) {
+				data_allocator::deallocate(start_, end_of_storage_ - start_);
+			}
+		}
 
 	public:
-		using data_allocator = simple_alloc<T, alloc>;
 		// construct and destruct
 		vector() :start_(0), finish_(0), end_of_storage_(0) {}
-		vector(size_type n, const T& x) { fill_initialize(n, x); }
+		vector(size_type n, const_reference x) { fill_initialize(n, x); }
 		explicit vector(size_type n) { fill_initialize(n, T()); }
 		vector(iterator first, iterator last) {
 			start_ = data_allocator::allocate(last - first);
@@ -48,10 +74,9 @@ namespace jw {
 			return size_type(end_of_storage_ - begin());
 		}
 		bool empty() const { return end() == begin(); }
-		reference operator[](size_type n) { return *(begin() + n); }
-		reference front() { return *begin(); }
-		reference back() { return *(end() - 1); }
-		void push_back(const T& x) {
+		reference front() const { return *begin(); }
+		reference back() const { return *(end() - 1); }
+		void push_back(const_reference x) {
 			if (finish_ != end_of_storage_) {
 				construct(finish_, x);
 				++finish_;
@@ -64,8 +89,8 @@ namespace jw {
 			--finish_;
 			destroy(finish_);
 		}
-		void insert(iterator position, size_type n, const T& x);
-		void insert(iterator position, const T& x) { insert_aux(position, x); }
+		void insert(iterator position, size_type n, const_reference x);
+		void insert(iterator position, const_reference x) { insert_aux(position, x); }
 		iterator erase(iterator first, iterator last) {
 			iterator new_finish = copy(last, finish_, first);
 			destroy(new_finish, finish_);
@@ -79,7 +104,7 @@ namespace jw {
 			destroy(finish_);
 			return position;
 		}
-		void resize(size_type n, const T& x) {
+		void resize(size_type n, const_reference x) {
 			if (n < size())
 				erase(begin() + n, end());
 			else
@@ -89,23 +114,25 @@ namespace jw {
 			resize(n, T());
 		}
 		void clear() { erase(begin(), end()); }
-	protected:
-		void fill_initialize(size_type n, const T& x) {
-			start_ = allocate_and_fill(n, x);
-			finish_ = start_ + n;
-			end_of_storage_ = finish_;
+		void swap(vector rhs) {
+			std::swap(start_, rhs.start_);
+			std::swap(finish_, rhs.finish_);
+			std::swap(end_of_storage_, rhs.end_of_storage_);
 		}
-		iterator allocate_and_fill(size_type n, const T& x) {
-			iterator result = data_allocator::allocate(n);
-			uninitialized_fill_n(result, n, x);
-			return result;
-		}
-		void insert_aux(iterator position, const T& x);
-		void deallocate() {
-			if (start_) {
-				data_allocator::deallocate(start_, end_of_storage_ - start_);
+		void reserve(size_type n) {
+			if (capacity() < n) {
+				const size_type old_size = size();
+				iterator result = allocate_and_copy(n, start_, finish_);
+				destroy(start_, finish_);
+				deallocate();
+				start_ = result;
+				finish_ = start_ + old_size;
+				end_of_storage_ = start_ + n;
 			}
 		}
+		reference operator[](size_type n) { return *(start_ + n); }
+		const_reference operator[](size_type n) const { return *(start_ + n); }
+	
 	protected:
 		T* start_;
 		T* finish_;
@@ -113,7 +140,7 @@ namespace jw {
 	};
 
 	template<typename T, typename Alloc>
-	inline void vector<T, Alloc>::insert(iterator position, size_type n, const T& x)
+	inline void vector<T, Alloc>::insert(iterator position, size_type n, const_reference x)
 	{
 		if (n != 0) {
 			if (size_type(end_of_storage_ - finish_) >= n) {
@@ -158,7 +185,7 @@ namespace jw {
 	}
 
 	template<typename T, typename Alloc>
-	inline void vector<T, Alloc>::insert_aux(iterator position, const T& x)
+	inline void vector<T, Alloc>::insert_aux(iterator position, const_reference x)
 	{
 		if (finish_ != end_of_storage_) {
 			construct(finish_, *(finish_ - 1));

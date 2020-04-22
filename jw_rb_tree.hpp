@@ -39,10 +39,11 @@ namespace jw {
 		using value_type = T;
 		using reference = Ref;
 		using pointer = Ptr;
-		using iterator = __rb_tree_iterator<T, T*, T&>;
-		using const_iterator = __rb_tree_iterator<T, const T*, const T&>;
+		using iterator = __rb_tree_iterator<T, T&, T*>;
+		using const_iterator = __rb_tree_iterator<T, const T&, const T*>;
 		using Self = __rb_tree_iterator<T, Ref, Ptr>;
 		using link_type = __rb_tree_node<T>*;
+		using iterator_category = bidirectional_iterator_tag;
 
 		explicit __rb_tree_iterator(link_type x) : node(x) {}
 		__rb_tree_iterator(const iterator& rhs) { node = rhs.node; }
@@ -255,7 +256,7 @@ namespace jw {
 					while (replace->color != __rb_tree_red && replace != root) {
 						// color is black, must has brother node
 						__rb_tree_node<T>* p = replace->parent;
-						__rb_tree_node<T>* bro = p->left == replace ? 
+						__rb_tree_node<T>* bro = p->left == replace ?
 							p->right : p->left;
 
 						// if bro is red, p and bro's chlid must be black, 
@@ -336,7 +337,7 @@ namespace jw {
 			using size_type = size_t;
 			using difference_type = ptrdiff_t;
 			using iterator = __rb_tree_iterator<value_type, reference, pointer>;
-			using const_iterator = __rb_tree_iterator<value_type, const const_reference, const_pointer>;
+			using const_iterator = __rb_tree_iterator<value_type, const_reference, const_pointer>;
 
 		protected:
 			// allocate and deallocate function
@@ -387,11 +388,13 @@ namespace jw {
 			void __erase(link_type x);
 
 		public:
-			rb_tree(const Compare comp = Compare()) 
-				: node_count(0), key_compare(comp) { init(); }
-			rb_tree(const rb_tree& rhs) { 
+			rb_tree(const Compare comp = Compare())
+				: node_count(0), key_compare(comp) {
 				init();
-				*this = rhs; 
+			}
+			rb_tree(const rb_tree& rhs) {
+				init();
+				*this = rhs;
 			}
 			~rb_tree() { clear(); put_node(header); }
 
@@ -406,6 +409,9 @@ namespace jw {
 			void clear();
 			Compare key_comp() const { return key_compare; }
 			std::pair<iterator, bool> insert_unique(const value_type& value);
+			iterator insert_unique(iterator y, const value_type& value);
+			template<typename InputIterator>
+			void insert_unique(InputIterator first, InputIterator last);
 			void erase(iterator position);
 			iterator find(const key_type& k);
 
@@ -415,13 +421,24 @@ namespace jw {
 			Compare key_compare;
 	};
 
+	/*
+	@para:
+		x: zero or non zero, insert at right or left
+		y: insert at left of y or right of y,
+		value: node's value
+	@return:
+		pointer to new node
+	*/
 	template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 	typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator
-	rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::__insert(link_type x, 
-		link_type y, const value_type& value)
+		rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::__insert(link_type x,
+			link_type y, const value_type& value)
 	{
 		link_type new_node = create_node(value);
-		if (y == header || key_compare(KeyOfValue()(value), key(y))) { // insert root or left
+		if (y == header || x != 0
+			|| key_compare(KeyOfValue()(value), key(y))) {
+			// insert root or left
+			// x !=0 used when force insert at left of y
 			y->left = new_node;
 			if (y == header) {
 				root() = new_node;
@@ -448,7 +465,7 @@ namespace jw {
 
 	template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 	typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::link_type
-	rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::__copy(link_type x, link_type p)
+		rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::__copy(link_type x, link_type p)
 	{
 		// for simple implementation, difference with SGI
 		link_type node_new = clone_node(x);
@@ -472,7 +489,7 @@ namespace jw {
 
 	template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 	rb_tree<Key, Value, KeyOfValue, Compare, Alloc>&
-	rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::
+		rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::
 		operator=(const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rhs)
 	{
 		if (this != &rhs) {
@@ -534,6 +551,48 @@ namespace jw {
 	}
 
 	template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+	typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator
+		rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::insert_unique(iterator y, const value_type& value)
+	{
+		// 1. insert at begin()'s left
+		if (y.node == header->left) {
+			if (size() && key_compre(KeyOfValue()(value), key(y.node)))
+				return __insert(y.node, y.node, value);
+			// or just __insert(1, y.node, value);
+			else
+				return insert_unique(value).first;
+		}// 2. insert at end()'s right
+		else if (y.node == header) {
+			if (key_compre(key(rightmost()), KeyOfValue()(value)))
+				return __insert(0, y.node, value);
+			else
+				return insert_unique(value).first;
+		}// 3. others
+		else {
+			iterator before = y;
+			--before;
+			if (key_compre(KeyOfValue()(value), key(y.node)) &&
+				key_compre(key(before.node), KeyOfValue()(value))) {
+				// depth: y < before
+				if (before.node->right == 0)
+					return __insert(0, before.node, value);
+				else
+					return __insert(y.node, y.node, value);
+			}
+			else
+				return insert_unique(value).first;
+		}
+	}
+
+	template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+	template<typename InputIterator>
+	inline void rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::insert_unique(InputIterator first, InputIterator last)
+	{
+		for (; first != last; ++first)
+			insert_unique(*first);
+	}
+
+	template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 	inline void rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::erase(iterator position)
 	{
 		link_type y = __rb_tree_rebalance_for_erase(position.node,
@@ -543,7 +602,7 @@ namespace jw {
 	}
 	template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 	typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator
-	rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::find(const key_type& k)
+		rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::find(const key_type& k)
 	{
 		link_type y = header;
 		link_type x = root();
