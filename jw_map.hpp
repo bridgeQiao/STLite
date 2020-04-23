@@ -1,17 +1,10 @@
 #pragma once
 
-#include <functional>
+#include "jw_function.hpp"
 #include "jw_alloc.hpp"
 #include "jw_rb_tree.hpp"
 
 namespace jw {
-	template<typename Pair>
-	struct select1st : public std::unary_function<Pair,typename Pair::first_type>
-	{
-		typename Pair::first_type operator()(const Pair& x) {
-			return x.first;
-		}
-	};
 
 	template<typename Key, typename T, typename Compare=std::less<Key>, typename Alloc=alloc>
 	class map {

@@ -1,15 +1,9 @@
 #pragma once
 
-#include <functional>
+#include "jw_function.hpp"
 #include "jw_rb_tree.hpp"
 
 namespace jw {
-
-	// define identity type as KeyOfValue
-	template<typename T>
-	struct identity : public std::unary_function<T, T> {
-		const T& operator()(const T& x) const { return x; }
-	};
 
 	template<typename Key, typename Compare = std::less<Key>, typename Alloc = alloc>
 	class set {

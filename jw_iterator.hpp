@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 namespace jw {
 	// iterator categories
 	struct input_iterator_tag {};
@@ -52,7 +54,7 @@ namespace jw {
 		using reference = const T&;
 	};
 
-	// useful function
+	// traits function
 	template<typename Iterator>
 	inline typename iterator_traits<Iterator>::iterator_category
 		iterator_category(const Iterator&) {
@@ -72,4 +74,113 @@ namespace jw {
 		return static_cast<iterator_traits<Iterator>::difference_type>(0);
 	}
 
+	// distance functions
+	template<typename InputIterator>
+	inline typename iterator_traits<InputIterator>::difference_type
+		__distance(InputIterator first, InputIterator last, input_iterator_tag) {
+		decltype(distance_type(InputIterator)) n = 0;
+		while (first != last) {
+			++first;
+			++n;
+		}
+		return n;
+	}
+
+	template<typename InputIterator>
+	inline typename iterator_traits<InputIterator>::difference_type
+		__distance(InputIterator first, InputIterator last, random_access_iterator_tag) {
+		return last - first;
+	}
+
+	template<typename InputIterator>
+	inline typename iterator_traits<InputIterator>::difference_type
+		distance(InputIterator first, InputIterator last) {
+		__distance(first, last, iterator_category(InputIterator));
+	}
+
+	// advance functions
+	template<typename InputIterator, typename Distance>
+	inline void __advance(InputIterator& first, Distance n, input_iterator_tag) {
+		while (n--) ++first;
+	}
+
+	template<typename BidirectinalIterator, typename Distance>
+	inline void __advance(BidirectinalIterator& first, Distance n, bidirectional_iterator_tag) {
+		if (n >= 0)
+			while (n--) ++first;
+		else
+			while (n++) --first;
+	}
+
+	template<typename RandomAccessIterator, typename Distance>
+	inline void __advance(RandomAccessIterator& first, Distance n, random_access_iterator_tag) {
+		first += n;
+	}
+
+	template<typename InputIterator, typename Distance>
+	inline void advance(InputIterator& first, Distance n) {
+		__advance(first, n, iterator_category(first));
+	}
+
+	// iterator adapter
+	template<typename Container>
+	struct back_insert_iterator {
+	public:
+		using iterator_category = output_iterator_tag;
+		using value_type = void;
+		using reference_type = void;
+		using pointer = void;
+		using difference_type = void;
+
+		explicit back_insert_iterator(Container& c) : container_(c){}
+		back_insert_iterator& operator=(const typename Container::value_type& x) {
+			container_.push_back(x);
+		}
+
+		back_insert_iterator& operator*() { return *this; }
+		back_insert_iterator& operator++() { return *this; }
+		back_insert_iterator& operator++(int) { return *this; }
+		
+	private:
+		Container* container_;
+	};
+
+	template<typename Container>
+	inline back_insert_iterator<Container> back_inserter(Container& c) {
+		return back_insert_iterator<Container>(c);
+	}
+
+	template<typename T, typename Distance = ptrdiff_t>
+	struct istream_iterator
+	{
+		using iterator_category = input_iterator_tag;
+		using value_type = T;
+		using differcent_type = Distance;
+		using pointer = const T*;
+		using reference = const T&;
+
+		explicit istream_iterator(std::istream& is) : stream_(&is) { read(); }
+		reference operator*() const { return value; }
+		pointer operator->() const { return &(operator*()); }
+		istream_iterator& operator++() {
+			read();
+			return *this;
+		}
+		istream_iterator operator++(int) {
+			istream_iterator tmp = *this;
+			read();
+			return tmp;
+		}
+
+	private:
+		std::istream* stream_;
+		value_type value_;
+		bool ok_;
+
+		void read() {
+			ok_ = (stream_ && *stream_) ? true : false;
+			if (ok_) stream_ >> value;
+			ok_ = *stream_ ? true : false;
+		}
+	};
 }
