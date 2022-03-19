@@ -1,5 +1,5 @@
 #include <iostream>
-#include <algorithm>
+#include "jw_algorithm.hpp"
 #include "jw_vector.hpp"
 #include "jw_list.hpp"
 #include "jw_deque.hpp"
@@ -92,7 +92,7 @@ void test_list() {
     print(ilist);
     ilist.reverse();
     print(ilist);
-    auto pos = std::find(ilist.begin(), ilist.end(), 3);
+    auto pos = jw::find(ilist.begin(), ilist.end(), 3);
     cout << *pos << endl;
     jw::list<int> ilist2;
     ilist2.push_back(10);

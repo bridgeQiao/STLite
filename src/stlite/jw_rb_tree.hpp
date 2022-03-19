@@ -363,7 +363,7 @@ namespace jw {
 			}
 
 			// some useful function
-			const key_type& key(link_type x) {
+			const key_type key(link_type x) {
 				return KeyOfValue()(x->value_field);
 			}
 			link_type& root() const { return header->parent; }
