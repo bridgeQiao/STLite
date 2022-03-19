@@ -29,7 +29,7 @@ void test_hashtable();
 
 int main()
 {
-    test_list();
+    test_vector();
     test_list();
     test_deque();
     cout << "\n-----------------   Test stack & queue\n";
