@@ -21,12 +21,6 @@ namespace jw {
 		p->~T();
 	}
 
-	// destroy function, [first, last)
-	template<typename ForwardIterator>
-	inline void destroy(ForwardIterator first, ForwardIterator last) {
-		__destroy(first, last, value_type(first));
-	}
-
 	// whether T has trivial destructor
 	template<typename ForwardIterator, typename T>
 	inline void __destroy(ForwardIterator first, ForwardIterator last, T*) {
@@ -43,6 +37,12 @@ namespace jw {
 	// T has trivial destructor, do nothing
 	template<typename ForwardIterator>
 	inline void __destroy_aux(ForwardIterator first, ForwardIterator last, __true_type) {}
+
+	// destroy function, [first, last)
+	template<typename ForwardIterator>
+	inline void destroy(ForwardIterator first, ForwardIterator last) {
+		__destroy(first, last, value_type(first));
+	}
 
 	// specilized destroy, char* wchar_t*, do nothing
 	inline void destroy(char*, char*) {}

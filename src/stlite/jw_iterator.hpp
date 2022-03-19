@@ -65,20 +65,20 @@ namespace jw {
 	template<typename Iterator>
 	inline typename iterator_traits<Iterator>::value_type*
 		value_type(const Iterator&) {
-		return static_cast<iterator_traits<Iterator>::value_type*>(0);
+		return nullptr;
 	}
 
 	template<typename Iterator>
 	inline typename iterator_traits<Iterator>::difference_type
 		distance_type(const Iterator&) {
-		return static_cast<iterator_traits<Iterator>::difference_type>(0);
+		return 0;
 	}
 
 	// distance functions
 	template<typename InputIterator>
 	inline typename iterator_traits<InputIterator>::difference_type
 		__distance(InputIterator first, InputIterator last, input_iterator_tag) {
-		decltype(distance_type(InputIterator)) n = 0;
+		decltype(distance_type(first)) n = 0;
 		while (first != last) {
 			++first;
 			++n;
@@ -95,7 +95,7 @@ namespace jw {
 	template<typename InputIterator>
 	inline typename iterator_traits<InputIterator>::difference_type
 		distance(InputIterator first, InputIterator last) {
-		__distance(first, last, iterator_category(InputIterator));
+		__distance(first, last, iterator_category(first));
 	}
 
 	// advance functions
@@ -134,7 +134,7 @@ namespace jw {
 
 		explicit back_insert_iterator(Container& c) : container_(c){}
 		back_insert_iterator& operator=(const typename Container::value_type& x) {
-			container_.push_back(x);
+			container_->push_back(x);
 		}
 
 		back_insert_iterator& operator*() { return *this; }
@@ -160,7 +160,7 @@ namespace jw {
 		using reference = const T&;
 
 		explicit istream_iterator(std::istream& is) : stream_(&is) { read(); }
-		reference operator*() const { return value; }
+		reference operator*() const { return value_; }
 		pointer operator->() const { return &(operator*()); }
 		istream_iterator& operator++() {
 			read();
@@ -179,7 +179,7 @@ namespace jw {
 
 		void read() {
 			ok_ = (stream_ && *stream_) ? true : false;
-			if (ok_) stream_ >> value;
+			if (ok_) stream_ >> value_;
 			ok_ = *stream_ ? true : false;
 		}
 	};

@@ -111,8 +111,8 @@ namespace jw {
 			EqualKey, const Value&, const Value*, Alloc>;
 		using size_type = size_t;
 		using difference_type = ptrdiff_t;
-		friend struct iterator;
-		friend struct const_iterator;
+		friend iterator;
+		friend const_iterator;
 	private:
 		size_type next_size(size_type n) { return __next_prime(n); }
 		void initialize_buckets(size_type n) {

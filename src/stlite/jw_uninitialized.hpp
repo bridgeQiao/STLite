@@ -71,7 +71,7 @@ namespace jw {
 	template<typename ForwardIterator, typename T, typename T1>
 	inline void __uninitialized_fill(ForwardIterator first,
 		ForwardIterator last, const T& x, T1*) {
-		using is_POD = __type_traits<T1>::is_POD_type;
+		using is_POD = typename __type_traits<T1>::is_POD_type;
 		__uninitialized_fill_aux(first, last, x, is_POD());
 	}
 

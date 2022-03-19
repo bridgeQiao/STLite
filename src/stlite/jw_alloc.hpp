@@ -34,7 +34,7 @@ namespace jw {
 			free(p);
 		}
 		static void* realloc(void* p, size_t, size_t new_sz) {
-			void* mem = realloc(p, new_sz);
+			void* mem = std::realloc(p, new_sz);
 			if (0 == mem) oom_realloc(p, new_sz);	//out of memory
 			return mem;
 		}
@@ -73,7 +73,7 @@ namespace jw {
 			my_malloc_handler = __malloc_alloc_oom_handler;
 			if (0 == my_malloc_handler) __THROW_BAD_ALLOC;
 			(*my_malloc_handler)();
-			mem = realloc(p, new_sz);
+			mem = std::realloc(p, new_sz);
 			if (mem) return mem;
 		}
 	}
